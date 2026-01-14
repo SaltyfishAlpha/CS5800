@@ -1,0 +1,4 @@
+// This is a template input file
+// Modify this file to match your problem's input format
+// Each line represents one input element
+
