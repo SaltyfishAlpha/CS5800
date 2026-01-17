@@ -1,2 +1,5 @@
 cmake-build-debug
 .idea
+problems/*/*.png
+problems/*/*.pdf
+problems/*/*.txt

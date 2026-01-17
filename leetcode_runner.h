@@ -1,57 +1,11 @@
 #ifndef LEETCODE_RUNNER_H
 #define LEETCODE_RUNNER_H
 
-#include <fstream>
-#include <sstream>
 #include <string>
-#include <vector>
 #include <iostream>
 #include <cstdio>
 
-namespace leetcode {
-    // Parse string to integer vector (e.g., "[1,2,3]")
-    inline std::vector<int> parseIntVector(const std::string& s) {
-        std::vector<int> result;
-        std::string cleaned = s;
-        
-        if (!cleaned.empty() && (cleaned.front() == '[' || cleaned.front() == '(')) {
-            cleaned = cleaned.substr(1);
-        }
-        if (!cleaned.empty() && (cleaned.back() == ']' || cleaned.back() == ')')) {
-            cleaned.pop_back();
-        }
-        
-        std::istringstream iss(cleaned);
-        std::string token;
-        while (std::getline(iss, token, ',')) {
-            token.erase(0, token.find_first_not_of(" \t"));
-            token.erase(token.find_last_not_of(" \t") + 1);
-            if (!token.empty()) {
-                result.push_back(std::stoi(token));
-            }
-        }
-        return result;
-    }
-    
-    // Output formatting
-    inline void printVector(const std::vector<int>& v) {
-        std::cout << "[";
-        for (size_t i = 0; i < v.size(); i++) {
-            std::cout << v[i];
-            if (i < v.size() - 1) std::cout << ",";
-        }
-        std::cout << "]" << std::endl;
-    }
-    
-    // Get input file path helper
-    inline std::string getInputPath(const std::string& problemName, const std::string& filename) {
-        #ifdef SOURCE_DIR
-        return std::string(SOURCE_DIR) + "/problems/" + problemName + "/" + filename;
-        #else
-        return "../../problems/" + problemName + "/" + filename;
-        #endif
-    }
-}
+#include "leetcode_utils.h"
 
 // Helper macros for optional parameter handling
 #define LEETCODE_MAIN_BEGIN_1(PROBLEM_NAME) \
