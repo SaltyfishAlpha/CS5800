@@ -5,31 +5,18 @@
 
 using namespace std;
 
-LEETCODE_MAIN_BEGIN("template")
-    // INPUT: Read from stdin (cin)
-    // Example:
-    // string line;
-    // getline(cin, line);
-    // vector<int> nums = leetcode::parseIntVector(line);
-    // getline(cin, line);
-    // int target = stoi(line);
-    // Or use scanf: scanf("%d", &target);
-    //
-    // scanf-style example (token-based, stops at whitespace):
-    // char buf[4096];
-    // scanf("%4095s", buf);              // e.g. "[2,7,11,15]"
-    // vector<int> nums = leetcode::parseIntVector(string(buf));
-    // int target;
-    // scanf("%d", &target);
+LEETCODE_MAIN_BEGIN("Find-the-Largest-Area-3047", "input2.txt")
+    string line;
+    getline(cin, line);
+    vector<vector<int>> bottomLeft = leetcode::parseInt2DVector(line);
+    getline(cin, line);
+    vector<vector<int>> topRight = leetcode::parseInt2DVector(line);
 
-    // Optional: Add Timer to calculate time-use
-    // leetcode::ScopedTimer timer("Problem Name Here");
+    leetcode::ScopedTimer timer("Find-the-Largest-Area-3047");
 
     // SOLVE: Call solution method
-    // Example:
-    // vector<int> result = solution.yourMethod(nums, target);
+    long long result = solution.largestSquareArea(bottomLeft, topRight);
     
     // OUTPUT: Print result
-    // Example:
-    // leetcode::printVector(result);
+    cout<<result<<endl;
 LEETCODE_MAIN_END
