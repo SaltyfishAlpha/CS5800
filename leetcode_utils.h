@@ -9,7 +9,7 @@
 #include <chrono>
 
 namespace leetcode {
-    // Path helper: always points to the SOURCE tree `problems/<problemName>/<filename>`
+    // Path helper
     inline std::string getInputPath(const std::string& problemName,
                                     const std::string& filename) {
         #ifdef SOURCE_DIR
@@ -18,7 +18,8 @@ namespace leetcode {
         return "../../problems/" + problemName + "/" + filename;
         #endif
     }
-    // ---- small string helpers ----
+
+    // ---- String helpers ----
     inline std::string trim(const std::string& s) {
         auto l = s.find_first_not_of(" \t\r\n");
         if (l == std::string::npos) return "";
@@ -26,18 +27,13 @@ namespace leetcode {
         return s.substr(l, r - l + 1);
     }
 
-    // Parses a LeetCode-style string line:
-    // - abc              -> "abc"
-    // - "abc"            -> "abc"
-    // - "a b"            -> "a b"
-    // - "a\\\"b"         -> a"b
     inline std::string parseString(const std::string& s) {
         std::string t = trim(s);
-        if (t.size() >= 2 && ((t.front() == '"' && t.back() == '"') || (t.front() == '\'' && t.back() == '\''))) {
+        if (t.size() >= 2 && ((t.front() == '"' && t.back() == '"') ||
+                              (t.front() == '\'' && t.back() == '\''))) {
             t = t.substr(1, t.size() - 2);
         }
 
-        // minimal unescape (enough for common LeetCode examples)
         std::string out;
         out.reserve(t.size());
         for (size_t i = 0; i < t.size(); ++i) {
@@ -49,7 +45,6 @@ namespace leetcode {
                 if (n == '\\') { out.push_back('\\'); i++; continue; }
                 if (n == '"') { out.push_back('"'); i++; continue; }
                 if (n == '\'') { out.push_back('\''); i++; continue; }
-                // unknown escape: keep the next char
                 out.push_back(n);
                 i++;
                 continue;
@@ -59,50 +54,58 @@ namespace leetcode {
         return out;
     }
 
-    // Parses: [1,2,3]  (spaces allowed)
-    inline std::vector<int> parseIntVector(const std::string& s) {
-        std::vector<int> result;
-        std::string cleaned = s;
+    // ===== Generic Tokenizer =====
 
-        // trim leading/trailing whitespace
-        auto l = cleaned.find_first_not_of(" \t\r\n");
-        auto r = cleaned.find_last_not_of(" \t\r\n");
-        if (l == std::string::npos) return result;
-        cleaned = cleaned.substr(l, r - l + 1);
+    inline std::vector<std::string> parseTokens1D(const std::string& s) {
+        std::vector<std::string> result;
+        std::string cleaned = trim(s);
 
-        // remove optional outer brackets
-        if (!cleaned.empty() && (cleaned.front() == '[' || cleaned.front() == '(')) cleaned.erase(cleaned.begin());
-        if (!cleaned.empty() && (cleaned.back() == ']' || cleaned.back() == ')')) cleaned.pop_back();
+        if (!cleaned.empty() && (cleaned.front() == '[' || cleaned.front() == '('))
+            cleaned.erase(cleaned.begin());
+        if (!cleaned.empty() && (cleaned.back() == ']' || cleaned.back() == ')'))
+            cleaned.pop_back();
 
-        std::istringstream iss(cleaned);
-        std::string token;
-        while (std::getline(iss, token, ',')) {
-            auto tl = token.find_first_not_of(" \t\r\n");
-            auto tr = token.find_last_not_of(" \t\r\n");
-            if (tl == std::string::npos) continue;
-            token = token.substr(tl, tr - tl + 1);
-            result.push_back(std::stoi(token));
+        std::string cur;
+        bool in_quote = false;
+        char quote_char = '"';
+        bool escape = false;
+
+        for (size_t i = 0; i < cleaned.size(); ++i) {
+            char c = cleaned[i];
+            if (escape) {
+                cur.push_back(c);
+                escape = false;
+                continue;
+            }
+            if (in_quote && c == '\\') { escape = true; cur.push_back(c); continue; }
+            if (c == '"' || c == '\'') {
+                if (!in_quote) { in_quote = true; quote_char = c; }
+                else if (c == quote_char) { in_quote = false; }
+                cur.push_back(c);
+                continue;
+            }
+            if (!in_quote && c == ',') {
+                auto token = trim(cur);
+                if (!token.empty()) result.push_back(token);
+                cur.clear();
+                continue;
+            }
+            cur.push_back(c);
         }
+        auto token = trim(cur);
+        if (!token.empty()) result.push_back(token);
+
         return result;
     }
 
-    // Parses: [[0,0,1],[2,2,1]] (spaces allowed)
-    inline std::vector<std::vector<int>> parseInt2DVector(const std::string& s) {
-        std::vector<std::vector<int>> result;
+    inline std::vector<std::vector<std::string>> parseTokens2D(const std::string& s) {
+        std::vector<std::vector<std::string>> result;
+        std::string cleaned = trim(s);
 
-        // trim
-        auto l = s.find_first_not_of(" \t\r\n");
-        auto r = s.find_last_not_of(" \t\r\n");
-        if (l == std::string::npos) return result;
-        std::string cleaned = s.substr(l, r - l + 1);
-
-        // must start/end with '[' ']'
-        if (cleaned.size() < 2 || cleaned.front() != '[' || cleaned.back() != ']') return result;
-
-        // remove outer []
+        if (cleaned.size() < 2 || cleaned.front() != '[' || cleaned.back() != ']')
+            return result;
         cleaned = cleaned.substr(1, cleaned.size() - 2);
 
-        // scan and extract each inner [ ... ] at depth 1
         int depth = 0;
         size_t start = std::string::npos;
         for (size_t i = 0; i < cleaned.size(); ++i) {
@@ -113,8 +116,8 @@ namespace leetcode {
             } else if (c == ']') {
                 depth--;
                 if (depth == 0 && start != std::string::npos) {
-                    std::string row = cleaned.substr(start, i - start + 1);
-                    result.push_back(parseIntVector(row));
+                    std::string row_str = cleaned.substr(start, i - start + 1);
+                    result.push_back(parseTokens1D(row_str));
                     start = std::string::npos;
                 }
             }
@@ -122,68 +125,129 @@ namespace leetcode {
         return result;
     }
 
-    inline void printVector(const std::vector<int>& v) {
-        std::cout << "[";
-        for (size_t i = 0; i < v.size(); i++) {
-            std::cout << v[i];
-            if (i < v.size() - 1) std::cout << ",";
-        }
-        std::cout << "]";
+    // ===== Type Conversion System (Extensible) =====
+
+    // Core converter: specialize this for new types
+    template<typename T>
+    inline T parseValue(const std::string& token);
+
+    // Built-in type converters
+    template<>
+    inline int parseValue<int>(const std::string& token) {
+        return std::stoi(trim(token));
     }
 
-    // Parses: ["a","b","c"] (quotes required for multi-token strings; spaces allowed)
+    template<>
+    inline long parseValue<long>(const std::string& token) {
+        return std::stol(trim(token));
+    }
+
+    template<>
+    inline long long parseValue<long long>(const std::string& token) {
+        return std::stoll(trim(token));
+    }
+
+    template<>
+    inline double parseValue<double>(const std::string& token) {
+        return std::stod(trim(token));
+    }
+
+    template<>
+    inline char parseValue<char>(const std::string& token) {
+        std::string t = parseString(token);
+        return t.empty() ? '\0' : t[0];
+    }
+
+    template<>
+    inline std::string parseValue<std::string>(const std::string& token) {
+        return parseString(token);
+    }
+
+    // Generic 1D parser
+    template<typename T>
+    inline std::vector<T> parse1DVector(const std::string& s) {
+        auto tokens = parseTokens1D(s);
+        std::vector<T> result;
+        result.reserve(tokens.size());
+        for (const auto& tok : tokens) {
+            result.push_back(parseValue<T>(tok));
+        }
+        return result;
+    }
+
+    // Generic 2D parser
+    template<typename T>
+    inline std::vector<std::vector<T>> parse2DVector(const std::string& s) {
+        auto token_rows = parseTokens2D(s);
+        std::vector<std::vector<T>> result;
+        result.reserve(token_rows.size());
+        for (const auto& row : token_rows) {
+            std::vector<T> row_typed;
+            row_typed.reserve(row.size());
+            for (const auto& tok : row) {
+                row_typed.push_back(parseValue<T>(tok));
+            }
+            result.push_back(row_typed);
+        }
+        return result;
+    }
+
+    // Backward compatibility aliases (optional)
+    inline std::vector<int> parseIntVector(const std::string& s) {
+        return parse1DVector<int>(s);
+    }
+
+    inline std::vector<std::vector<int>> parseInt2DVector(const std::string& s) {
+        return parse2DVector<int>(s);
+    }
+
+    inline std::vector<std::vector<char>> parseChar2DVector(const std::string& s) {
+        return parse2DVector<char>(s);
+    }
+
     inline std::vector<std::string> parseStringVector(const std::string& s) {
-        std::vector<std::string> res;
-        std::string cleaned = trim(s);
-        if (cleaned.size() < 2 || cleaned.front() != '[' || cleaned.back() != ']') return res;
-        cleaned = cleaned.substr(1, cleaned.size() - 2);
-
-        std::string cur;
-        bool in_quote = false;
-        char quote_char = '"';
-        bool escape = false;
-
-        for (size_t i = 0; i < cleaned.size(); ++i) {
-            char c = cleaned[i];
-            if (escape) {
-                cur.push_back('\\');
-                cur.push_back(c);
-                escape = false;
-                continue;
-            }
-            if (in_quote && c == '\\') { escape = true; continue; }
-            if (c == '"' || c == '\'') {
-                if (!in_quote) { in_quote = true; quote_char = c; cur.push_back(c); continue; }
-                if (c == quote_char) { in_quote = false; cur.push_back(c); continue; }
-            }
-            if (!in_quote && c == ',') {
-                auto item = trim(cur);
-                if (!item.empty()) res.push_back(parseString(item));
-                cur.clear();
-                continue;
-            }
-            cur.push_back(c);
-        }
-        auto item = trim(cur);
-        if (!item.empty()) res.push_back(parseString(item));
-        return res;
+        return parse1DVector<std::string>(s);
     }
 
-    inline void printVector(const std::vector<std::string>& v) {
+    // ===== Print System (Extensible) =====
+
+    // Core printer: specialize for custom types
+    template<typename T>
+    inline void printValue(const T& val) {
+        std::cout << val;
+    }
+
+    // String specialization (with escaping)
+    template<>
+    inline void printValue<std::string>(const std::string& val) {
+        std::cout << "\"";
+        for (char c : val) {
+            if (c == '\\' || c == '"') std::cout << '\\';
+            std::cout << c;
+        }
+        std::cout << "\"";
+    }
+
+    // Char specialization (with quotes)
+    template<>
+    inline void printValue<char>(const char& val) {
+        std::cout << "\"" << val << "\"";
+    }
+
+    // Generic 1D printer
+    template<typename T>
+    inline void printVector(const std::vector<T>& v) {
         std::cout << "[";
         for (size_t i = 0; i < v.size(); i++) {
-            std::cout << "\"";
-            for (char c : v[i]) {
-                if (c == '\\' || c == '"') std::cout << '\\';
-                std::cout << c;
-            }
-            std::cout << "\"";
+            printValue(v[i]);
             if (i < v.size() - 1) std::cout << ",";
         }
         std::cout << "]";
     }
 
-    inline void print2DVector(const std::vector<std::vector<int>>& v) {
+    // Generic 2D printer
+    template<typename T>
+    inline void print2DVector(const std::vector<std::vector<T>>& v) {
         std::cout << "[";
         for (size_t i = 0; i < v.size(); i++) {
             printVector(v[i]);
@@ -192,21 +256,41 @@ namespace leetcode {
         std::cout << "]";
     }
 
-    // ---- testcase generation helpers ----
+    // ===== Serialization System (Extensible) =====
 
-    // Serialize common types back to LeetCode-style strings
-    inline std::string toString(const std::vector<int>& v) {
+    template<typename T>
+    inline std::string toValueString(const T& val) {
+        std::ostringstream oss;
+        oss << val;
+        return oss.str();
+    }
+
+    template<>
+    inline std::string toValueString<std::string>(const std::string& val) {
+        std::ostringstream oss;
+        oss << "\"";
+        for (char c : val) {
+            if (c == '\\' || c == '"') oss << '\\';
+            oss << c;
+        }
+        oss << "\"";
+        return oss.str();
+    }
+
+    template<typename T>
+    inline std::string toString(const std::vector<T>& v) {
         std::ostringstream oss;
         oss << "[";
         for (size_t i = 0; i < v.size(); ++i) {
-            oss << v[i];
+            oss << toValueString(v[i]);
             if (i + 1 < v.size()) oss << ",";
         }
         oss << "]";
         return oss.str();
     }
 
-    inline std::string toString(const std::vector<std::vector<int>>& v) {
+    template<typename T>
+    inline std::string toString(const std::vector<std::vector<T>>& v) {
         std::ostringstream oss;
         oss << "[";
         for (size_t i = 0; i < v.size(); ++i) {
@@ -217,25 +301,8 @@ namespace leetcode {
         return oss.str();
     }
 
-    inline std::string toString(const std::vector<std::string>& v) {
-        std::ostringstream oss;
-        oss << "[";
-        for (size_t i = 0; i < v.size(); ++i) {
-            oss << "\"";
-            for (char c : v[i]) {
-                if (c == '\\' || c == '"') oss << '\\';
-                oss << c;
-            }
-            oss << "\"";
-            if (i + 1 < v.size()) oss << ",";
-        }
-        oss << "]";
-        return oss.str();
-    }
+    // ---- File I/O ----
 
-    // Write a testcase file (each string is one line)
-    // Writes into the source tree, next to other input files:
-    //   problems/<problemName>/<filename>
     inline bool writeTestcaseFile(const std::string& problemName,
                                   const std::string& filename,
                                   const std::vector<std::string>& lines) {
@@ -247,7 +314,7 @@ namespace leetcode {
         return true;
     }
 
-    // ---- timing helpers ----
+    // ---- Timing ----
 
     class ScopedTimer {
     public:
@@ -270,4 +337,3 @@ namespace leetcode {
 }
 
 #endif // LEETCODE_UTILS_H
-
