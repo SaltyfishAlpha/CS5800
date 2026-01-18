@@ -3,3 +3,4 @@ cmake-build-debug
 problems/*/*.png
 problems/*/*.pdf
 problems/*/*.txt
+problems/*/*.mp4

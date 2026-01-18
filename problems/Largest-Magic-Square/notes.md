@@ -1,6 +1,6 @@
 ## Problem
 
-**Title:** 2975. Maximum Square Area by Removing Fences From a Field
+**Title:** 1895. Largest Magic Square
 
 **Level:** Medium
 
@@ -9,3 +9,4 @@
 ![img.png](img.png)
 
 ![img_1.png](img_1.png)
+
