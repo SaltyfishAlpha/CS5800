@@ -5,7 +5,7 @@
 
 using namespace std;
 
-LEETCODE_MAIN_BEGIN("Largest-Magic-Square", "input1.txt")
+LEETCODE_MAIN_BEGIN("Largest-Magic-Square", "input2.txt")
     string line;
     getline(cin, line);
     vector<vector<int>> grid = leetcode::parseInt2DVector(line);;
