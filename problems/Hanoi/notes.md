@@ -4,7 +4,7 @@
 
 **Language:** C++
 
-**Video Explanation:** https://northeastern.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=20a838d0-edf0-4be1-8ed9-b3d800082f1c
+**Video Explanation:** https://northeastern.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=93be47eb-be23-47c9-9576-b3e600818597
 
 ## Complexity
 - **Time**: O(2^n)
