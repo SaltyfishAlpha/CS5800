@@ -8,12 +8,14 @@
 
 using namespace std;
 
-LEETCODE_MAIN_BEGIN("SparseSet")
+LEETCODE_MAIN_BEGIN("problem215")
     string line;
     getline(cin, line);
     vector<int> nums = leetcode::parseIntVector(line);
-    Solution::SparseSetTest(nums);
+    getline(cin, line);
+    int k = stoi(line);
 
-    Solution::SparseSetLoadTest(1e5);
-    Solution::VectorLoadTest(1e5);
+    leetcode::ScopedTimer timer("k-th value");
+    auto result = solution.findKthLargest(nums, k);
+    leetcode::printValue(result);
 LEETCODE_MAIN_END

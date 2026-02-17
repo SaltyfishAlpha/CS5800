@@ -7,13 +7,13 @@
 #include <string>
 
 using namespace std;
+using namespace problem506;
 
-LEETCODE_MAIN_BEGIN("SparseSet")
+LEETCODE_MAIN_BEGIN("problem506")
     string line;
     getline(cin, line);
     vector<int> nums = leetcode::parseIntVector(line);
-    Solution::SparseSetTest(nums);
 
-    Solution::SparseSetLoadTest(1e5);
-    Solution::VectorLoadTest(1e5);
+    auto result = solution.findRelativeRanks(nums);
+    leetcode::printVector(result);
 LEETCODE_MAIN_END
